@@ -1,0 +1,223 @@
+<html>
+  <head>
+    <link rel="icon" href="data:;base64,iVBORw0KGgo=" />
+    <script src="https://github.com/Bandwidth/webrtc-browser/releases/download/0.5.2/BandwidthRtc.bundle.js"></script>
+    <script src="volume_meter.js"></script>
+    <script language="javascript">
+      const basePath = "http://localhost:3000";
+      const bandwidthRtc = new BandwidthRtc();
+      let agent_id = 0;
+
+      /**
+       * Setup our listeners for the events from the media server
+       */
+      window.addEventListener("load", (event) => {
+        console.log("loading listeners");
+        bandwidthRtc.onStreamAvailable((rtcStream) => {
+          console.log("receiving audio!");
+          remoteAudioComponent = document.getElementById("mediaPlayer");
+          remoteAudioComponent.srcObject = rtcStream.mediaStream;
+          setupVolumeMeter(rtcStream)
+          enableButton("transferButton");
+          enableButton("endButton");
+        });
+        bandwidthRtc.onStreamUnavailable((endpointId) => {
+          remoteAudioComponent = document.getElementById("mediaPlayer");
+          console.log("no longer receiving audio");
+          remoteAudioComponent.srcObject = undefined;
+
+          if(document.getElementById("canvas_" + endpointId)){
+            document.getElementById("canvas_" + endpointId).remove();
+          }
+
+          // update the interface
+          if (!document.getElementById("endButton").disabled) {
+            alert("Call ended, stream is unavailable");
+          }
+
+          setActive();
+          disableButton("endButton");
+          enableButton("callButton");
+        });
+      });
+
+      /**
+       * Get the token required to auth with the media server
+       */
+      async function getToken() {
+        // prevent double clicks
+        disableButton("onlineButton");
+        console.log("Fetching token from server");
+        agent_id = document.getElementById("agent_id").value
+        const url = basePath + "/startBrowserCall?agent_id="+ agent_id;
+        const res = await fetch(url);
+        // basic error handling
+        if (res.status !== 200) {
+          console.log(res);
+          alert("Failed to set you up as a participant: " + res.status);
+        } else {
+          const json = await res.json();
+          console.log(json);
+          startStreaming(json.token);
+        }
+      }
+
+      /**
+       * Now that we have the token, we can start streaming media
+       * The token param is fetched from the server above
+       */
+      async function startStreaming(token) {
+        console.log("connecting to BAND WebRTC server");
+        // Connect to Bandwidth WebRTC
+
+        await bandwidthRtc.connect({ deviceToken: token });
+        console.log("connected to bandwidth webrtc!");
+        // Publish the browser's microphone
+        await bandwidthRtc.publish({
+          audio: true,
+          video: false,
+        });
+        console.log("browser mic is streaming");
+        // update ui status & enable the next step
+        setActive();
+        if(agent_id == 1){
+          enableButton("callButton");
+        } else {
+          document.getElementById("awaitingTransfer").style.display = "inline-block";
+        }
+      }
+
+      /**
+       * Reach out to our Server app to start the PSTN call
+       */
+      async function callPSTN() {
+        // prevent double clicks
+        disableButton("callButton");
+        // the agent id field tells the system what session this caller should join
+        const url = basePath + "/startPSTNCall?agent_id="+ agent_id;
+
+        console.log("About to make a call");
+        let res = await fetch(url);
+        console.log(res);
+        if (res.status !== 200) {
+          console.log(res);
+          alert("Failed to set you up as a participant: " + res.status);
+        } else {
+          setInCall();
+        }
+      }
+
+      /**
+       * Transferring the call to another agent
+       *  - we are just flip/flopping the sending and receiving agents for simplicity, this could
+       *   instead be set locally or determined on the server side
+       */
+      async function transferCall() {
+        if (agent_id == 1){
+          to_agent_id = 2;
+        } else {
+          to_agent_id = 1;
+        }
+        const url = basePath + "/transferPSTNCall?from_agent_id="+ agent_id +"&to_agent_id="+ to_agent_id;
+        console.log("About to transfer a call");
+        try {
+          const res = await fetch(url);
+          const json = await res.json();
+          console.log(json);
+          // enable the next step
+          setActive();
+          disableButton("endButton");
+          enableButton("callButton");
+        } catch (error) {
+          console.error("Error in callPSTN:", error);
+        }
+      }
+
+      async function endCall() {
+        const url = basePath + "/endPSTNCall";
+        console.log("About to make a call");
+        try {
+          const res = await fetch(url);
+          const json = await res.json();
+          console.log(json);
+          // enable the next step
+          setActive();
+          disableButton("endButton");
+          enableButton("callButton");
+        } catch (error) {
+          console.error("Error in callPSTN:", error);
+        }
+      }
+
+      //
+      // Functions to make the UI easy, not WebRTC at all
+      //
+      // Online indicator
+      function setInCall() {
+        var statusDiv = document.getElementById("call_status");
+        statusDiv.innerHTML = "Online - IN Call";
+        statusDiv.style.color = "green";
+      }
+      function setActive() {
+        var statusDiv = document.getElementById("call_status");
+        statusDiv.innerHTML = "Online - no Call";
+        statusDiv.style.color = "green";
+      }
+      function setInactive() {
+        var statusDiv = document.getElementById("call_status");
+        statusDiv.innerHTML = "Offline";
+        statusDiv.style.color = "red";
+      }
+
+      // buttons
+      function enableButton(buttonId) {
+        document.getElementById(buttonId).disabled = false;
+      }
+      function disableButton(buttonId) {
+        document.getElementById(buttonId).disabled = true;
+      }
+
+      // Manage our little volume meter
+      function setupVolumeMeter(rtcStream){
+        // create a canvas for audio visual
+        var stream_canvas = document.createElement("canvas");
+        stream_canvas.id = "canvas_" + rtcStream.endpointId;
+        stream_canvas.width = 350;
+        stream_canvas.height = 20;
+        stream_canvas.style = "border: 1px solid gray;padding: 20px;";
+        // get the canvas showing some audio
+        attach(stream_canvas, rtcStream.mediaStream);
+
+        document.getElementById("mediaDiv").appendChild(stream_canvas);
+      }
+    </script>
+  </head>
+
+  <body>
+    <div style="margin: auto; width: 50%">
+      <h1 style="text-align: center">Transfer example</h1>
+      <div style="width: 500px; height: 50px">
+        Status:<span id="call_status">Offline</span>
+      </div>
+      <div style="margin: auto; width: 100%">
+        1. Choose an agent to log in as (1 agent per browser) <select id="agent_id">
+          <option value="1">Agent 1</option>
+          <option value="2">Agent 2</option>
+        </select><br /><br />
+        2. Click "Get Online" to start the session 
+        <button id="onlineButton" onClick="getToken()">Get Online</button>
+        <br /><br />
+        3. For Agent 1, click "Dial out" to call out to the PSTN number you have set in your configuration
+        <button id="callButton" onClick="callPSTN()" disabled>Dial out</button>
+        <div id="awaitingTransfer" style="display:none">Awaiting transfer from agent 1...</div>
+        <br /><br />
+        4. Click "Transfer" to send the caller from Agent 1 to agent 2 <button id="transferButton" onClick="transferCall()" disabled>Transfer</button><br /><br />
+        5. You can hang up on the phone or click this button
+        <button id="endButton" onClick="endCall()" disabled>End Call</button>
+      </div><br />
+      <div id="mediaDiv">
+        <audio id="mediaPlayer" autoplay></audio>
+      </div>
+    </div>
+  </body>
+</html>
