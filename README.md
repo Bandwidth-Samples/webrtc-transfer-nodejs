@@ -46,22 +46,22 @@ cp .env.default .env
 
 Add your Bandwidth account settings to `.env`:
 
-- TRANSFER_ACCOUNT_ID
-- TRANSFER_USERNAME
-- TRANSFER_PASSWORD
+- BW_ACCOUNT_ID
+- BW_USERNAME
+- BW_PASSWORD
 
 Add your Voice API application information:
 
-- TRANSFER_VOICE_APPLICATION_ID
+- BW_VOICE_APPLICATION_ID
 
 Enter your local server address (e.g. ngrok url):
 
-- TRANSFER_BASE_CALLBACK_URL
+- BASE_CALLBACK_URL
 
 To make an outbound call from the browser, add a phone number to dial:
 
-- TRANSFER_OUTBOUND_PHONE_NUMBER
-- TRANSFER_FROM_NUMBER (the number that will appear as the FROM for the call)
+- TO_NUMBER
+- FROM_NUMBER (the number that will appear as the FROM for the call)
 
 ### Install dependencies and build
 
