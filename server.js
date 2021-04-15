@@ -13,15 +13,15 @@ app.use(express.static("public"));
 // config
 const port = 3000;
 const localDir = __dirname;
-const accountId = process.env.TRANSFER_ACCOUNT_ID;
+const accountId = process.env.BW_ACCOUNT_ID;
 
 // Global variables
-BandwidthWebRTC.Configuration.basicAuthUserName = process.env.TRANSFER_USERNAME;
-BandwidthWebRTC.Configuration.basicAuthPassword = process.env.TRANSFER_PASSWORD;
+BandwidthWebRTC.Configuration.basicAuthUserName = process.env.BW_USERNAME;
+BandwidthWebRTC.Configuration.basicAuthPassword = process.env.BW_PASSWORD;
 var webRTCController = BandwidthWebRTC.APIController;
 
-BandwidthVoice.Configuration.basicAuthUserName = process.env.TRANSFER_USERNAME;
-BandwidthVoice.Configuration.basicAuthPassword = process.env.TRANSFER_PASSWORD;
+BandwidthVoice.Configuration.basicAuthUserName = process.env.BW_USERNAME;
+BandwidthVoice.Configuration.basicAuthPassword = process.env.BW_PASSWORD;
 var voiceController = BandwidthVoice.APIController;
 
 // track our session IDs and phone call Id
@@ -64,11 +64,11 @@ app.get("/startPSTNCall", async (req, res) => {
     agent_id = req.query.agent_id;
     // start the call first, this will have some lead time (call setup, ringing, etc)
     console.log(
-      `start the PSTN call to ${process.env.TRANSFER_OUTBOUND_PHONE_NUMBER} for agent ${agent_id}`
+      `start the PSTN call to ${process.env.TO_NUMBER} for agent ${agent_id}`
     );
     callResponse = await initiateCallToPSTN(
-      process.env.TRANSFER_FROM_NUMBER,
-      process.env.TRANSFER_OUTBOUND_PHONE_NUMBER
+      process.env.FROM_NUMBER,
+      process.env.TO_NUMBER
     );
 
     // then set them up in the session
@@ -82,7 +82,7 @@ app.get("/startPSTNCall", async (req, res) => {
     calls.set(callResponse.callId, participant);
 
     console.log(
-      `Call created: ${callResponse.callId} from: ${process.env.TRANSFER_FROM_NUMBER} to: ${process.env.TRANSFER_OUTBOUND_PHONE_NUMBER}`
+      `Call created: ${callResponse.callId} from: ${process.env.FROM_NUMBER} to: ${process.env.TO_NUMBER}`
     );
 
     res.send({ status: "ringing" });
@@ -144,7 +144,7 @@ app.get("/transferPSTNCall", async (req, res) => {
     res.send({ status: "transferred" });
   } catch (error) {
     console.log(
-      `error transferring ${process.env.TRANSFER_OUTBOUND_PHONE_NUMBER}:`,
+      `error transferring ${process.env.TO_NUMBER}:`,
       error
     );
     res.status(500).send({ status: "call transfer failed" });
@@ -163,7 +163,7 @@ app.get("/endPSTNCall", async (req, res) => {
     res.send({ status: "hungup" });
   } catch (error) {
     console.log(
-      `error hanging up ${process.env.TRANSFER_OUTBOUND_PHONE_NUMBER}:`,
+      `error hanging up ${process.env.TO_NUMBER}:`,
       error
     );
     res.status(500).send({ status: "call hangup failed" });
@@ -333,8 +333,8 @@ async function initiateCallToPSTN(from_number, to_number) {
   var body = new BandwidthVoice.ApiCreateCallRequest({
     from: from_number,
     to: to_number,
-    applicationId: process.env.TRANSFER_VOICE_APPLICATION_ID,
-    answerUrl: process.env.TRANSFER_BASE_CALLBACK_URL + "callAnswered",
+    applicationId: process.env.BW_VOICE_APPLICATION_ID,
+    answerUrl: process.env.BASE_CALLBACK_URL + "callAnswered",
     answerMethod: "POST",
     callTimeout: "30",
   });
