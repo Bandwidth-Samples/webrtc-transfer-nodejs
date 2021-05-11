@@ -1,7 +1,7 @@
 <html>
   <head>
     <link rel="icon" href="data:;base64,iVBORw0KGgo=" />
-    <script src="https://github.com/Bandwidth/webrtc-browser/releases/download/0.5.2/BandwidthRtc.bundle.js"></script>
+    <script src="https://github.com/Bandwidth/webrtc-browser/releases/download/0.9.1/BandwidthRtc.bundle.js"></script>
     <script src="volume_meter.js"></script>
     <script language="javascript">
       const basePath = "http://localhost:3000";
@@ -200,7 +200,7 @@
         Status:<span id="call_status">Offline</span>
       </div>
       <div style="margin: auto; width: 100%">
-        1. Choose an agent to log in as (1 agent per browser) <select id="agent_id">
+        1. Choose an agent to log in as (One agent per browser) <select id="agent_id">
           <option value="1">Agent 1</option>
           <option value="2">Agent 2</option>
         </select><br /><br />
@@ -211,7 +211,7 @@
         <button id="callButton" onClick="callPSTN()" disabled>Dial out</button>
         <div id="awaitingTransfer" style="display:none">Awaiting transfer from agent 1...</div>
         <br /><br />
-        4. Click "Transfer" to send the caller from Agent 1 to agent 2 <button id="transferButton" onClick="transferCall()" disabled>Transfer</button><br /><br />
+        4. Click "Transfer" to send the caller between Agent 1 and Agent 2 <button id="transferButton" onClick="transferCall()" disabled>Transfer</button><br /><br />
         5. You can hang up on the phone or click this button
         <button id="endButton" onClick="endCall()" disabled>End Call</button>
       </div><br />
