@@ -60,8 +60,8 @@ Enter your local server address (e.g. ngrok url):
 
 To make an outbound call from the browser, add a phone number to dial:
 
-- TO_NUMBER
-- FROM_NUMBER (the number that will appear as the FROM for the call)
+- USER_NUMBER
+- BW_NUMBER (the number that will appear as the FROM for the call)
 
 ### Install dependencies and build
 
@@ -76,10 +76,10 @@ Browse to [http://localhost:3000](http://localhost:3000) and grant permission to
 
 Follow the instructions on the screen, which are:
 
-1. Choose an agent to log in as (1 agent per browser)
+1. Choose an agent to log in as (One agent per browser)
 2. Click "Get Online" to start the session Get Online. The web UI will indicate when you are connected.
 3. For Agent 1, click "Dial out" to call out to the PSTN number you have set in your configuration
-4. Click "Transfer" to send the caller from Agent 1 to agent 2 (you can do this back and forth to your hearts content)
+4. Click "Transfer" to send the caller between Agent 1 and Agent 2 (you can do this back and forth to your heart's content)
 5. You can hang up on the phone or click this button End Call
 
 You should now be able to make calls using your browser and transfer them between agents!
