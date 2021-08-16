@@ -47,8 +47,8 @@
       async function getToken() {
         // prevent double clicks
         disableButton("onlineButton");
-        console.log("Fetching token from server");
         agent_id = document.getElementById("agent_id").value
+        console.log("Fetching token from server, agent #" + agent_id);
         const url = basePath + "/startBrowserCall?agent_id="+ agent_id;
         const res = await fetch(url);
         // basic error handling
@@ -94,9 +94,8 @@
         // prevent double clicks
         disableButton("callButton");
         // the agent id field tells the system what session this caller should join
+        console.log("About to make a call for agent #" + agent_id);
         const url = basePath + "/startPSTNCall?agent_id="+ agent_id;
-
-        console.log("About to make a call");
         let res = await fetch(url);
         console.log(res);
         if (res.status !== 200) {
@@ -134,8 +133,8 @@
       }
 
       async function endCall() {
-        const url = basePath + "/endPSTNCall";
-        console.log("About to make a call");
+        const url = basePath + "/endPSTNCall?agent_id=" + agent_id;
+        console.log("About to end a call");
         try {
           const res = await fetch(url);
           const json = await res.json();
